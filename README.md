@@ -35,6 +35,8 @@ Cualquier agente de IA que pueda **leer los archivos de esta carpeta** y hablar 
 - **Gemini CLI.**
 - …y similares.
 
+**Sistemas operativos:** funciona en **Windows, macOS y Linux**. Lo puedes usar por la **terminal** (Claude Code CLI) o con la **app de escritorio de Claude**, que integra Claude Code y funciona muy bien.
+
 > En la práctica, todo esto se construyó y se probó con **Claude Code (CLI)** usando el modelo **Opus 4.8**. Con esa combinación es con la que hay más horas de vuelo.
 
 ---
