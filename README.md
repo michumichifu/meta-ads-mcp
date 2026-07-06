@@ -52,17 +52,16 @@ Cualquier agente de IA que pueda **leer los archivos de esta carpeta** y hablar 
 
 ## Primeros pasos
 
-1. **Descarga o clona esta carpeta** y ábrela en tu terminal.
-2. Arranca tu agente con un timeout amplio (el MCP de Meta tarda en cargar sus ~80 herramientas la primera vez). Con Claude Code:
-   ```bash
-   MCP_TIMEOUT=120000 MCP_TOOL_TIMEOUT=120000 claude
-   ```
-3. Escribe `/mcp`, elige **`meta-ads`** y **autoriza con tu cuenta de Meta** (una sola vez, por navegador). Es OAuth: no expones ningún token.
-4. Pide en **lenguaje natural**: *"lista mis campañas"*, *"analiza la campaña X y hazme un informe"*, *"crea una campaña de clientes potenciales a WhatsApp, en pausa"*.
+1. **Descarga o clona esta carpeta** y ábrela con tu agente de IA:
+   - **App de escritorio de Claude:** ábrela como carpeta/proyecto. **No ejecutas ningún comando:** ya trae un `.claude/settings.json` que aplica un timeout amplio (el MCP de Meta tarda en cargar sus ~80 herramientas la primera vez).
+   - **Claude Code por terminal:** entra a la carpeta y ejecuta `claude`. El timeout amplio también se aplica solo (está en `.claude/settings.json`).
+   - **Gemini CLI, Antigravity u otra herramienta:** ábrela con la tuya; si el MCP tarda en la primera carga, dale un momento (y, si hace falta, sube el timeout en la config de esa herramienta).
+2. Escribe `/mcp`, elige **`meta-ads`** y **autoriza con tu cuenta de Meta** (una sola vez, por navegador). Es OAuth: no expones ningún token.
+3. Pide en **lenguaje natural**: *"lista mis campañas"*, *"analiza la campaña X y hazme un informe"*, *"crea una campaña de clientes potenciales a WhatsApp, en pausa"*.
 
-El `.mcp.json` ya viene con el servidor configurado. El `CLAUDE.md` se carga solo y le da a tu agente el mapa de todo esto.
+El `.mcp.json` ya trae el servidor configurado y el `.claude/settings.json` el **timeout amplio por defecto**. El `CLAUDE.md` se carga solo y le da a tu agente el mapa de todo esto.
 
-> Si al conectar ves `-32001 Request timed out`: **no es error de credenciales**, es el timeout de la primera carga. Reinicia con el comando del paso 2.
+> Si aun así ves `-32001 Request timed out` al conectar: **no es error de credenciales**, es la primera carga (el MCP lista sus ~80 herramientas). Vuelve a abrir la carpeta o reinicia tu agente y dale un momento.
 
 > **Disponibilidad (importante):** el MCP de Meta todavía **NO** está habilitado en todas las cuentas publicitarias. Meta lo va activando de forma **gradual y automática** (sin avisar). Si una cuenta no aparece o Meta rechaza el acceso, no te desesperes: prueba con **otra cuenta** (a veces una del mismo negocio sí la tiene y otra no) y **revisa cada pocos días o cada semana** — se activa solo.
 
