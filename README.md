@@ -26,6 +26,15 @@ Todo con **valores de ejemplo (placeholders)** — reemplázalos por los tuyos. 
 
 Lo único que este repo agrega es **la capa de conocimiento** encima de esa conexión.
 
+## Dos caminos para automatizar Meta: MCP o CLI
+
+Puedes automatizar reportes, análisis, y la creación de campañas y anuncios de **dos** formas. Este kit documenta las dos, pero **recomendamos el MCP** para empezar:
+
+- **MCP de Meta (recomendado, es lo que cubre este kit).** No instalas nada: una URL + tu login (OAuth). Único límite práctico: no sube la imagen del anuncio de forma nativa (se resuelve con una **URL pública**, ver más abajo).
+- **CLI oficial de Meta (avanzado).** Un programa que instalas; **sí** sube imágenes de forma nativa. A cambio, requiere una **app de Facebook Developer** y un token propio. Está documentado en **`PLAYBOOK - CLI de Meta.md`** (y en `referencia-oficial-meta/`) por si te interesa ese camino.
+
+Regla simple: **empieza por el MCP**; salta al CLI solo si necesitas la subida nativa de imágenes y no quieres usar una URL pública.
+
 ## Con qué herramientas se usa
 
 Cualquier agente de IA que pueda **leer los archivos de esta carpeta** y hablar con un servidor MCP:
@@ -54,6 +63,8 @@ Cualquier agente de IA que pueda **leer los archivos de esta carpeta** y hablar 
 El `.mcp.json` ya viene con el servidor configurado. El `CLAUDE.md` se carga solo y le da a tu agente el mapa de todo esto.
 
 > Si al conectar ves `-32001 Request timed out`: **no es error de credenciales**, es el timeout de la primera carga. Reinicia con el comando del paso 2.
+
+> **Disponibilidad (importante):** el MCP de Meta todavía **NO** está habilitado en todas las cuentas publicitarias. Meta lo va activando de forma **gradual y automática** (sin avisar). Si una cuenta no aparece o Meta rechaza el acceso, no te desesperes: prueba con **otra cuenta** (a veces una del mismo negocio sí la tiene y otra no) y **revisa cada pocos días o cada semana** — se activa solo.
 
 ---
 
@@ -98,6 +109,8 @@ Eso, a mano, son **2–3 horas** de trabajo tedioso y mentalmente agotador. Con 
 - **Todo se crea EN PAUSA.** Nada se activa (empieza a gastar) sin tu confirmación explícita.
 - Esto **no es un bot de automatización masiva** ni un evasor de límites. Es tu criterio + una IA que ejecuta el trabajo pesado. Úsalo con cuidado, a volumen razonable.
 - Respeta las [Políticas de publicidad de Meta](https://transparency.meta.com/es-la/policies/ad-standards/) y sus [límites de la API](https://developers.facebook.com/documentation/ads-commerce/marketing-api/overview/rate-limiting).
+- **No compartas datos sensibles** (de clientes o pacientes) pegándolos en herramientas o guías de terceros. Trabaja solo con lo necesario.
+- **Límites de Meta, en simple:** cada llamada suma "puntos" (leer ≈ 1 punto; crear o editar ≈ 3 puntos). Hay un tope por cuenta; si lo superas de golpe, Meta te frena unos minutos. No dispares muchas acciones en ráfaga: espaciarlas evita el bloqueo. Detalle oficial en `referencia-oficial-meta/meta-uso-de-la-api.md`.
 
 ## El principio de fondo
 
