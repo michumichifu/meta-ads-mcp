@@ -24,7 +24,8 @@ bloquees el diagnóstico** esperando que el usuario te dé un número. Procede a
 
 Referencias para calcular el objetivo del cliente (solo cuando quiera afinarlo):
 - **Ventas:** ROAS objetivo (`ROAS objetivo ≈ (1 / margen neto) × 1.5` para ganar; margen 30% → ~5x).
-- **Clientes Potenciales (form o web):** CPL objetivo (`≈ ticket × tasa de cierre × margen × 0.3`).
+- **Clientes Potenciales (form o web):** CPL objetivo (`≈ ticket × tasa de cierre × margen × 0.3`). Ojo: la tasa
+  de cierre casi nunca se conoce si no ves el CRM del cliente; entonces el resultado es una **hipótesis** y se dice así.
 - **WhatsApp:** costo por conversación objetivo. **Reconocimiento:** evalúa por CPM y alcance vs periodos.
 
 ## Regla inquebrantable — la tabla manda
@@ -65,7 +66,7 @@ de nivel hasta el anuncio/día que lo explica. Detalle en `PLAYBOOK-Analizar-Cam
    frecuencia, CPM) y encuentra el **eslabón 🔴 del embudo** (impresiones → clics → landing → checkout →
    compra/registro).
 3. **¿Qué haremos?** — según el diagnóstico:
-   - Resultado ≥ objetivo → **escalar** (subir presupuesto ~20% cada 3 días, sin resetear el aprendizaje).
+   - Resultado ≥ objetivo → **escalar** (subir presupuesto ~20% cada 2 o 3 días, medido contra lo que se gastó de verdad; los creativos nuevos, en otro conjunto).
    - Resultado entre 80% y objetivo → **optimizar** el paso del embudo con % más bajo; estás cerca, no pauses.
    - Resultado < 80% del objetivo → auditar urgente el embudo; revisar margen/precio; pausar o reducir.
    - CTR bajo → nuevos creativos (gancho/oferta más clara). Tasa de conversión baja → simplificar el

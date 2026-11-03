@@ -1,6 +1,6 @@
 # Crear campañas en Meta por MCP (reglas críticas + receta WhatsApp)
 
-> Todos los valores de este playbook (IDs de cuenta/página/píxel, números de teléfono, nombres como «Clínica Dental Aurora» o «Dra. Aurora Peña») son **ejemplos ficticios**. Reemplázalos por los de tu propia cuenta.
+> Todos los valores de este playbook (IDs de cuenta/página/píxel, números de teléfono, nombres como "Clínica Dental Aurora" o "Dra. Aurora Peña") son **ejemplos ficticios**. Reemplázalos por los de tu propia cuenta.
 
 Cómo crear campañas correctas por el MCP de Meta, evitando los errores del primer intento.
 Aplica a cualquier cliente. Todo se crea **en PAUSA** para revisión; nada se activa sin confirmación.
@@ -11,14 +11,84 @@ Aplica a cualquier cliente. Todo se crea **en PAUSA** para revisión; nada se ac
 > creativos; no es parte de este flujo. Aquí ya llegas con la imagen y los textos en mano.
 
 Todas las tools de Meta son `mcp__meta-ads__ads_*`. Cargarlas con ToolSearch antes de usarlas.
-Si `tools/list` da timeout, arrancar con `MCP_TIMEOUT=120000 MCP_TOOL_TIMEOUT=120000 claude`.
+Si `tools/list` da timeout, el timeout amplio ya va en `.claude/settings.json`: cierra y vuelve a abrir la carpeta.
 
-## Reglas OBLIGATORIAS (no romper — feedback real de Luis)
+## 0. LO QUE CAMBIÓ DESDE JULIO DE 2026 (léelo antes que el resto)
+
+Las secciones de abajo se escribieron en julio. Esto las corrige donde chocan:
+
+1. **El MCP ya sube imágenes y videos**: `ads_creative_upload_media` (por URL pública o archivo local).
+   Su despliegue es gradual: si responde *"This tool is new and is being gradually rolled out"*, usa el
+   rodeo de siempre (`ads_create_creative` con `image_url` y luego leer el hash) o el CLI.
+2. 🔴 **Por MCP, el creativo de un anuncio YA NO se edita.** `ads_update_entity(entity_type:"ad",
+   fields:{creative:{...}})` responde *"Ad creatives are immutable and cannot be edited in place"*. Es una
+   regla del MCP, no de Meta: desde el Administrador y por la Graph API sí se puede. Consecuencias:
+   - El "método alterno (crear simple → editar)" y el arreglo de multi-anunciante "editando con el
+     creativo inline" **ya no funcionan por MCP**. Crea el anuncio **directo** con la receta
+     `DEGREES_OF_FREEDOM` y con todo puesto a la primera.
+   - **UTM (`url_tags`), botón (CTA), imagen y destino se deciden ANTES de crear.** Rehacer diez
+     anuncios cuesta una sesión entera.
+   - `tracking_specs` tampoco se pone después por MCP: va en el `ads_create_ad`.
+3. 🔴 **No leas el `image_hash` mientras el creativo está `IN_PROCESS`.** Se midió que Meta devuelve, sin
+   error, el hash de **otra imagen de la cuenta**. Espera a `ACTIVE`, comprueba que todos los hashes del
+   lote son distintos y, si puedes, compara la imagen (un hash perceptual tipo dHash: distancia 0-1 = la
+   misma; 10 o más = otra). Y no pongas `image_url` dentro de `ads_create_ad`: asocia mal el hash para
+   siempre. Sube con `ads_create_creative` (o `ads_creative_upload_media`).
+4. **`ads_create_creative` exige `link_url`** aunque el esquema no lo marque obligatorio (*"link_url is
+   required for image ads"*). Meta añade al nombre un sufijo con fecha y hash. La `image_url` firmada que
+   devuelve Meta **caduca** (403): no la guardes como dato estable.
+5. **Mejoras automáticas (Advantage+ creative):** por Graph v25/v26, `standard_enhancements: OPT_OUT`
+   da el error **3858504**. Hay que apagarlas **una a una** dentro de `creative_features_spec`:
+   `image_touchups`, `text_optimizations`, `image_brightness_and_contrast`, `enhance_cta`,
+   `image_templates`, `add_text_overlay`, `description_automation`, `adapt_to_placement`. `music` (es de
+   video) tumba la llamada en un anuncio de imagen. Después de crear, **relee `creative_features_spec`**:
+   haber mandado `OPT_OUT` no prueba que quedara apagado; lo que importa es que **ninguna** quede en
+   `OPT_IN` (Meta devuelve decenas en `OPT_OUT`, no hay que contarlas). Por MCP, `standard_enhancements`
+   todavía se aceptaba en septiembre de 2026.
+6. **Un conjunto admite 50 anuncios como máximo, contando los pausados** (subcódigo 1487809, "Demasiados
+   anuncios"). Los borrados liberan cupo al instante: para rehacer anuncios, primero borra los viejos.
+7. **`"creative_summary": "Dynamic creative"` en la respuesta del MCP no significa que el conjunto sea
+   dinámico.** La prueba real es que el segundo anuncio entre sin el error 1885553. El `spec` que devuelve
+   el MCP es el eco de lo que mandaste, no una lectura de lo guardado.
+8. **El `link` de destino sale de UNA sola fuente por lote** (tu hoja, tu brief), nunca se deduce ni se
+   copia de un anuncio hermano. Antes de publicar, haz una tabla anuncio por anuncio con la URL real en
+   Meta frente a la esperada.
+9. **`start_time` no se edita** si ya quedó en el pasado, aunque el conjunto esté en pausa y sin gasto
+   (error 100, subcódigo **1487057**). Si la campaña tiene que arrancar a una hora, se pone **al crear el
+   conjunto**; si no, hay que rehacer el conjunto (la campaña se reaprovecha).
+10. **Geografía:** `custom_locations` va **dentro** de `geo_locations` (si va fuera: 2446385, "A location
+    is missing"). Meta añade `frequently_in` por su cuenta. Un conjunto **nuevo** con `location_types` sin
+    `recent` pasa el POST pero **no se publica** ("segmentación por lugar suprimida", #1870194). Si dudas,
+    quita `location_types` y deja que Meta ponga `["frequently_in","home","recent"]`.
+11. **Edad con Público Advantage+:** con `advantage_audience: 1` la edad es solo una sugerencia (vuelve
+    como `age_min_suggestion`). Para que el mínimo sea un suelo duro:
+    `targeting_automation.individual_setting: {age: 1}`. Se puede cambiar aunque ya haya anuncios, sin
+    mandarlos a revisión. Al auditar se mira `age_range`, no `age_min`. 🔴 Una regla de edad puesta en la
+    cuenta **no corrige** lo que llega por API: si mandas `age_min: 18`, sale con 18.
+12. **Emplazamientos obsoletos que tumban el conjunto entero:** `video_feeds` de Facebook (2490562) y
+    `explore` de Instagram (2490589).
+13. **Interacción → Sitio web exige `promoted_object` (píxel + evento) aunque optimices por clics.** Sin
+    él, cualquier objetivo de rendimiento da 100/2490408. Con evento `CONTACT` pasan `LINK_CLICKS`,
+    `LANDING_PAGE_VIEWS`, `REACH` e `IMPRESSIONS`; con `LEAD`, 2446814. Meta acepta un enlace `wa.me` como
+    "Sitio web". Regla de fondo: **si la interfaz ofrece una combinación, a tu llamada le falta un campo.**
+14. **Clic a WhatsApp que optimiza por clientes potenciales reales:** `OUTCOME_LEADS` +
+    `destination_type: WHATSAPP` + `optimization_goal: LEAD_GENERATION` + `promoted_object {page_id,
+    whatsapp_phone_number}`, sin píxel, atribución de **1 día tras el clic** (con 7: 1885423). Se alimenta
+    con eventos `LeadSubmitted` por la API de conversiones. El paso a paso, en el § 1.7 de
+    `PLAYBOOK-Analizar-Campanas-Meta.md`. Si el número no está vinculado a la página: 1487246.
+15. **Duplicar un conjunto puede encoger la atribución** de 7 días de clic a 1. Revisa `attribution_spec`.
+16. **Para publicar, la cuenta pide un teléfono verificado** (Configuración de la cuenta publicitaria →
+    Información de contacto). El enlace del aviso de Meta lleva a otra pantalla donde esa opción no está.
+17. **`url_tags` admite macros**: `{{site_source_name}}` (fb/ig/an/msg), `{{placement}}`,
+    `{{campaign.id}}`. Ponlas al crear si quieres saber de qué emplazamiento llega cada visita.
+
+## Reglas OBLIGATORIAS (no romper — aprendidas en uso real)
 
 1. **DESACTIVAR "anuncio multi-anunciante" (multi-advertiser ads).** A veces es contraproducente.
    Se hace en el objeto `creative` del anuncio:
    `"contextual_multi_ads": {"enroll_status": "OPT_OUT"}`
-   (además, opt-out de mejoras automáticas: `"degrees_of_freedom_spec":{"creative_features_spec":{"standard_enhancements":{"enroll_status":"OPT_OUT"}}}`).
+   (además, opt-out de mejoras automáticas en `degrees_of_freedom_spec.creative_features_spec`: por MCP
+   se aceptaba `standard_enhancements`; por Graph v25+ hay que apagarlas una a una, ver § 0 punto 5).
 
 2. **SIEMPRE cargar las VARIANTES de copy** (opciones de texto), no una sola. Es CLAVE: ahorra la
    hora de copiar/pegar manual. Ten por creativo sus 3 primary texts, 5 headlines y 5 descriptions.
@@ -34,7 +104,7 @@ Si `tools/list` da timeout, arrancar con `MCP_TIMEOUT=120000 MCP_TOOL_TIMEOUT=12
 4. **Preferencia de destino: WhatsApp (más simple).** Salvo que se pida web. WhatsApp no necesita
    píxel ni UTM.
 
-5. **Prefijo 🤖 OBLIGATORIO en TODOS los nombres** (campaña, conjunto y anuncios) para distinguir lo
+5. **Prefijo 🤖 recomendado en los nombres** (campaña, conjunto y anuncios) para distinguir lo
    hecho por IA (Claude Code / MCP / CLI) de lo hecho por humanos. Ej.: `🤖 07.2 Julio - Clientes
    Potenciales a Web - Prótesis - MM/DD/YYYY`, `🤖 01 TF/SI - ...`, `🤖 01 Imagen 1 - estético`.
 
@@ -61,9 +131,10 @@ ad_set nuevo con el pin correcto en el create y se re-montan los anuncios.
 
 ## Concepto clave que hay que entender antes de empezar (imágenes)
 
-- **El MCP de Meta NO sube imágenes.** No existe endpoint de subida (`ads_get_ad_images` /
-  `ads_get_ad_videos` dicen "upload not yet supported"). Para poner una imagen en un anuncio solo se
-  puede con:
+- **Desde noviembre de 2026 el MCP SÍ sube imágenes y videos** con `ads_creative_upload_media`
+  (`upload_source:"URL"` + `media_type` + `media_url`, o `"LOCAL_FILE"`), que devuelve el `image_hash`.
+  En julio no existía (`ads_get_ad_images` / `ads_get_ad_videos` decían "upload not yet supported") y en
+  algunas cuentas sigue en despliegue gradual. Para poner una imagen en un anuncio se usa:
   - `image_hash` → una imagen que **ya esté en el banco de imágenes de la CUENTA publicitaria**
     (`act_1234567890123456/adimages`), **o**
   - `image_url` → una **URL pública** que Meta descarga sola (y ahí Meta genera su propio `image_hash`).
@@ -165,7 +236,7 @@ Verificar con `ads_get_ad_preview { ad_id, ad_format:"MOBILE_FEED_STANDARD" }` q
 texto + botón de WhatsApp. (El preview a veces da timeout — reintentar; es lentitud del servidor de
 Meta, no error.)
 
-### ESTRUCTURA CORRECTA (regla de Luis — SIEMPRE así, NO negociable)
+### ESTRUCTURA CORRECTA (criterio de operación que funcionó, no regla de Meta)
 - **UN solo conjunto por servicio/estrategia**, y **dentro, TODOS los anuncios** (uno por imagen/ángulo),
   y **dentro de cada anuncio, sus variantes de copy** (3 textos principales, 5 títulos, 5 descripciones).
   Varios conjuntos SOLO si se quiere testear anuncios con **presupuesto separado** (no es lo normal).
@@ -174,8 +245,12 @@ Meta, no error.)
 - **"Rechazo" de anuncio:** en pausa NADA se rechaza por política; los errores eran de **validación de
   la API** al armar la estructura, no revisión de Meta. La imagen es **estática y completa** (sin recorte).
 
-### Método alterno (crear simple → editar para agregar variantes)
-Si por lo que sea prefieres crear simple y luego editar, funciona así:
+### Método alterno (crear simple → editar para agregar variantes) — ⛔ YA NO FUNCIONA POR MCP
+> Desde el 29 jul 2026 el MCP responde *"Ad creatives are immutable and cannot be edited in place"* al
+> paso 2. Se deja como referencia porque **por la Graph API** el cambio de creativo de un anuncio sí
+> funciona. Por MCP, crea el anuncio directo con la receta `DEGREES_OF_FREEDOM`.
+
+Si trabajas por la Graph API y prefieres crear simple y luego editar, funcionaba así:
 1. **Crear** cada anuncio SIMPLE con `object_story_spec.link_data` (imagen estática completa + 1 copy).
    Así conviven los 10 anuncios en el mismo conjunto (no dinámico):
    ```json
@@ -192,10 +267,10 @@ Si por lo que sea prefieres crear simple y luego editar, funciona así:
    anuncios quedan con sus variantes conviviendo en un solo conjunto. ✅ Confirmado jul-2026.
    (Si un update da `INTERNAL error`, reintentar: es transitorio.)
 
-### Sin variantes (1 copy por anuncio) — el flujo estándar más usado
-- Crear el anuncio con `creative_id` (de un creativo simple ya subido) → **editar** el anuncio con
-  `{creative:{creative_id, contextual_multi_ads:{enroll_status:"OPT_OUT"}}}` para **desmarcar
-  multi-anunciante** (el `creative_id` lo deja MARCADO). Varios de estos anuncios caben en 1 conjunto.
+### Sin variantes (1 copy por anuncio)
+- Crear el anuncio con el creativo **inline** (`object_story_spec` + `contextual_multi_ads:{enroll_status:
+  "OPT_OUT"}`), no con un `creative_id` compartido: un `creative_id` deja el multi-anunciante MARCADO y,
+  por MCP, ya no se puede editar después para desmarcarlo. Varios de estos anuncios caben en 1 conjunto.
 - Crear ese **creativo simple**: `ads_create_creative` con `image_url` (URL pública) **o** `image_hash`,
   más `message`, `headline`, `description`, `link_url` y `call_to_action_type` → devuelve el `creative_id`.
 
@@ -210,7 +285,8 @@ Si por lo que sea prefieres crear simple y luego editar, funciona así:
    + `promoted_object {pixel_id, custom_event_type}` (evento custom: OTHER + custom_event_str).
 3. **N** `ads_create_ad` en ESE conjunto, cada uno con la receta `asset_feed_spec` DEGREES_OF_FREEDOM
    (o simple + variantes) + `url_tags` + `call_to_action LEARN_MORE` + opt-out multi-anunciante.
-4. Tracking del píxel en cada anuncio (`tracking_specs`).
+4. Tracking del píxel en cada anuncio (`tracking_specs`), **en el mismo `ads_create_ad`** (por MCP no se
+   añade después).
 5. Todo PAUSED → avisar. **No editar la geo en la GUI** antes de publicar (re-inyecta Advantage+ → #1870194).
 
 ## Destino WHATSAPP — VERDAD DEFINITIVA (verificada end-to-end, 07/04/2026)
@@ -294,7 +370,8 @@ Esto causó los errores más molestos. Reglas que quedaron claras:
    Con Advantage+ ON, Meta trata la ubicación como *señal* y **re-inyecta al publicar** el tipo de
    lugar "personas interesadas / que viajan a" (que Meta ya **descontinuó**) → provoca el error
    **#1870194** JUSTO al activar (en el editor no aparece, pero al darle activar/publicar sí).
-3. **Fijar `location_types` a `["home","recent"]`** ("viven o estuvieron recientemente"), sin
+3. **Fijar `location_types` a `["home","recent"]`** ("viven o estuvieron recientemente"; Meta añade
+   `frequently_in` por su cuenta, y un conjunto nuevo sin `recent` no se publica), sin
    `travel_in`.
 
 **Targeting recomendado (usarlo desde la creación del conjunto para no tener que arreglarlo):**
@@ -319,7 +396,8 @@ Aplicar/actualizar con `ads_update_entity { entity_type:"ad_set", fields:{"targe
 > no se pisan.
 
 ## Tracking — eventos web (pixel) y offline (destino web)
-En cada anuncio, agregar el pixel con `ads_update_entity` (los anuncios ya creados):
+En cada anuncio, el pixel va en `tracking_specs` **al crearlo** (`ads_create_ad`): el MCP ya no deja
+añadirlo después. Por la Graph API sí se puede con un update. La forma del campo:
 ```
 ads_update_entity {
   entity_type:"ad", entity_id:120210000000000001,
@@ -337,7 +415,7 @@ ads_update_entity {
   (En `ads_get_ad_images` aparecen como "untitled_..." sin distinción; no sirve para mapear.)
 
 ## PRESUPUESTO: SIEMPRE ABO (en el conjunto), NO CBO (campaña)
-- Regla de Luis: en estas campañas el **presupuesto va en el CONJUNTO de anuncios (ABO)**, nunca a
+- Criterio de operación (no regla de Meta): en estas campañas el **presupuesto va en el CONJUNTO de anuncios (ABO)**, nunca a
   nivel campaña. → En `ads_create_campaign` NO pasar `campaign_daily_budget`/`campaign_lifetime_budget`;
   pasar `daily_budget` en `ads_create_ad_set`. Con ABO, la opción "compartir presupuesto entre
   conjuntos" queda deshabilitada por naturaleza (no se activa).
@@ -345,7 +423,9 @@ ads_update_entity {
   {enroll_status:"OPT_OUT"}` SOLO pega si el anuncio tiene **creativo propio inline** (`object_story_spec`).
   Si el anuncio referencia un **`creative_id` compartido**, editar `{creative:{creative_id,
   contextual_multi_ads:OPT_OUT}}` devuelve `success:true` pero **NO cambia nada** (el anuncio sigue con
-  el creativo compartido sin opt-out → queda MARCADO). Fix: editar con el creativo **inline completo**:
+  el creativo compartido sin opt-out → queda MARCADO). ⛔ Por MCP ya no se arregla editando (los
+  creativos son inmutables por esa vía): **créalo bien a la primera** con el creativo inline. Por la Graph
+  API, el arreglo era editar con el creativo **inline completo**:
   `{creative:{object_story_spec:{page_id, link_data:{link, message, name, image_hash,
   call_to_action:{type:"WHATSAPP_MESSAGE", value:{link}}}}, contextual_multi_ads:{enroll_status:"OPT_OUT"}}}`.
   Eso crea un creativo nuevo propio del anuncio CON el opt-out. **Verificar SIEMPRE por Graph:**
@@ -372,7 +452,7 @@ Entrega solo si **los 3 niveles están ACTIVOS + publicado**: campaña ✅ + con
 
 | Síntoma / error | Causa real | Solución |
 |---|---|---|
-| No hay cómo subir la imagen por MCP | El MCP de Meta no sube imágenes | Usar `image_url` = una URL pública de tu imagen |
+| No hay cómo subir la imagen por MCP | Hasta nov 2026 el MCP no subía imágenes; hoy `ads_creative_upload_media` sí, con despliegue gradual ("gradually rolled out") | `ads_creative_upload_media`; si no está activa en tu cuenta, `image_url` = una URL pública de tu imagen |
 | La imagen subida a "Biblioteca multimedia" no aparece en la cuenta | Biblioteca de portafolio ≠ `adimages` de la cuenta | Usar `image_url` pública (no la biblioteca) |
 | Google Drive no da URL pública | El MCP de Drive no crea/edita permisos (solo lee) | No sirve para hospedar; usar tu propio hosting |
 | La URL pública da **404 intermitente** | Imagen recién generada; tu servidor de imágenes aún no la sirve estable | Esperar a que responda `200` fijo (probar con `curl`) y reintentar |
@@ -383,10 +463,10 @@ Entrega solo si **los 3 niveles están ACTIVOS + publicado**: campaña ✅ + con
 | `tracking_specs` offline: *"clave offline_event_set no válida"* (1634011) | Dataset unificado; no hay offline set separado | Solo enlazar el pixel (`offsite_conversion` + `fb_pixel`) |
 | Campos bloqueados en GUI (conversión, objetivo, página, WhatsApp) | Normal en conjuntos de **mensajería** tras crearse | No es bug; no hace falta editarlos |
 | **#2923012** "Necesitas WhatsApp Business" | **Cascada** del error de ubicación (el número ya estaba conectado — Meta lo confirma en el diálogo "Instalar") | Se cae solo al arreglar la ubicación |
-| **#1870194** "opción de segmentación por lugar suprimida" — vuelve **al activar** | **Advantage+ Audience** re-inyecta el tipo de lugar descontinuado al publicar | `advantage_audience: 0` + `location_types:["home","recent"]` + `custom_locations` |
+| **#1870194** "opción de segmentación por lugar suprimida" — vuelve **al activar** | **Advantage+ Audience** re-inyecta el tipo de lugar descontinuado al publicar, **o** un conjunto nuevo con `location_types` sin `recent` | `advantage_audience: 0` + `location_types:["home","recent"]` + `custom_locations` |
 | **1815089** al fijar `REPLIES` por MCP | El MCP mapea `REPLIES`→`LEAD_GENERATION` y la WABA no está sana | Usar `CONVERSATIONS` + receta DEGREES_OF_FREEDOM, o ruta de respaldo `OUTCOME_SALES` |
 | UTM / parámetros de URL en WhatsApp | No aplican a WhatsApp (sí a campañas web) | No poner UTM en WhatsApp |
-| "Mejoras de contenido" / Advantage+ creative | Meta las activa por defecto | Dejarlas **OFF** (`standard_enhancements` OPT_OUT) |
+| "Mejoras de contenido" / Advantage+ creative | Meta las activa por defecto | Dejarlas **OFF**: por MCP `standard_enhancements` OPT_OUT; por Graph v25+ una a una (§ 0 punto 5), y releer `creative_features_spec` |
 | Con `LANDING_PAGE_VIEWS` el píxel da "combinación no válida" | Goal incompatible con el píxel | Usar `OFFSITE_CONVERSIONS` |
 | `INTERNAL error` en un update | A veces transitorio | Reintentar 1-2 veces; PERO ver los casos NO transitorios de abajo |
 | `INTERNAL` al **crear** ad_set con `OFFSITE_CONVERSIONS` | Bug del create con ese goal | Crear con `LANDING_PAGE_VIEWS` y **editar** a OFFSITE + promoted_object |
@@ -394,9 +474,9 @@ Entrega solo si **los 3 niveles están ACTIVOS + publicado**: campaña ✅ + con
 | **3260011** "no puedes editar píxel/evento/optimización de un conjunto publicado" | El MCP crea el ad_set "publicado en pausa"; se bloquea al consolidarse con anuncios | Fijar el evento/optimización correctos ANTES de crear anuncios; si ya está bloqueado, crear un ad_set nuevo |
 | CTA `BOOK_NOW` sale como "desconocido" en la GUI | No es el CTA estándar para ese anuncio | Usar `LEARN_MORE` ("Más información") por defecto |
 
-## CONVENCIÓN DE NOMBRES (regla de Luis — usar SIEMPRE)
+## CONVENCIÓN DE NOMBRES (la que usamos; adáptala a la tuya)
 - **🤖 al INICIO de TODO nombre** (campaña, conjunto y anuncios), antes del resto: marca lo hecho por
-  IA (MCP/CLI) vs humano. Es obligatorio en los tres niveles.
+  IA (MCP/CLI) vs humano, en los tres niveles.
 - **Campaña:** `MM.n Mes - [Objetivo] a [Destino] - [servicio/detalle] - MM/DD/YYYY`
   - `MM` = número del mes; `.n` = correlativo si hay más de una campaña del mes (07.1, 07.2, 07.3…).
   - `Mes` en palabra (Julio). Objetivo: Clientes Potenciales / Interacción / Ventas / Tráfico…
@@ -428,10 +508,11 @@ Entrega solo si **los 3 niveles están ACTIVOS + publicado**: campaña ✅ + con
 4. `ads_create_ad_set` (WhatsApp: CONVERSATIONS, WHATSAPP, promoted_object page_id; web:
    OFFSITE_CONVERSIONS, WEBSITE, promoted_object pixel; `daily_budget`, `billing_event IMPRESSIONS`,
    **targeting bueno desde ya**).
-5. Por creativo: `ads_create_creative` con la `image_url` pública (o ten el hash) → `ads_get_creatives`
-   para leer el `image_hash` → `ads_create_ad` **flexible** con hash en `link_data` **y**
+5. Por creativo: `ads_creative_upload_media` (o `ads_create_creative` con la `image_url` pública) → espera a
+   `ACTIVE` y lee el `image_hash` (todos distintos, § 0 punto 3) → `ads_create_ad` **flexible** con hash en `link_data` **y**
    `asset_feed_spec` (`optimization_type: DEGREES_OF_FREEDOM`, bodies/titles/descriptions) + opt-out.
-6. Web: `ads_update_entity` en cada anuncio → `tracking_specs` con el pixel + `url_tags` UTM.
+6. Web: `tracking_specs` con el pixel + `url_tags` UTM **dentro del mismo `ads_create_ad`** (por MCP no se
+   añaden después).
 7. `ads_get_ad_preview` de cada anuncio para confirmar imagen + variantes + botón/CTA.
 8. Usuario recarga la GUI, **Revisar y publicar**; luego activar (campaña→conjunto→anuncios) —
    confirmación explícita porque gasta.

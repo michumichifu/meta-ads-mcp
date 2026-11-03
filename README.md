@@ -28,12 +28,20 @@ Lo único que este repo agrega es **la capa de conocimiento** encima de esa cone
 
 ## Dos caminos para automatizar Meta: MCP o CLI
 
-Puedes automatizar reportes, análisis, y la creación de campañas y anuncios de **dos** formas. Este kit documenta las dos, pero **recomendamos el MCP** para empezar:
+Hoy hay **dos** formas de que un agente de IA cree y analice campañas de Meta. Este kit documenta las dos:
 
-- **MCP de Meta (recomendado, es lo que cubre este kit).** No instalas nada: una URL + tu login (OAuth). Único límite práctico: no sube la imagen del anuncio de forma nativa (se resuelve con una **URL pública**, ver más abajo).
-- **CLI oficial de Meta (avanzado).** Un programa que instalas; **sí** sube imágenes de forma nativa. A cambio, requiere una **app de Facebook Developer** y un token propio. Está documentado en **`PLAYBOOK - CLI de Meta.md`** (y en `referencia-oficial-meta/`) por si te interesa ese camino.
+| | **MCP de Meta** | **CLI de Meta** (y la Graph API) |
+|---|---|---|
+| Costo | **Gratis** | Gratis, pero con trabajo previo |
+| Qué necesitas | Nada: una URL + tu login (OAuth) | Una **app propia en Facebook Developer**, aprobada en el **App Review**, y un token de usuario del sistema. Para publicar la app, el **portafolio dueño de la app tiene que estar verificado** |
+| Herramientas | ~100 (crear, informes, píxel, públicos, catálogo, pruebas A/B, benchmarks…) | Toda la API de Marketing |
+| Límites | Algunos: por esta vía un creativo publicado no se edita, no lee `promoted_object` ni `tracking_specs`, no manda eventos a la API de conversiones | Casi ninguno; respetar los límites de llamadas |
+| Instalar | Nada | `pip install meta-ads` o `brew install facebook/fb/meta-ads` (macOS/Linux) |
 
-Regla simple: **empieza por el MCP**; salta al CLI solo si necesitas la subida nativa de imágenes y no quieres usar una URL pública.
+- **El MCP** es el camino para empezar: es lo que cubre la mayor parte de este kit. Desde noviembre de 2026 **también sube imágenes y videos** (antes había que pasar una URL pública).
+- **El CLI es un poco mejor** para el trabajo diario y para lo que el MCP no cubre, pero exige la app de Facebook Developer. Cómo la creamos, qué permisos pedimos, cómo escribimos los textos, cómo grabamos los videos solo con el agente de IA (sin construir ninguna interfaz), cuánto tardó Meta y cómo llegamos al acceso completo: **`GUIA - Crear la app de Meta y pasar el App Review (acceso completo al CLI).md`**. El uso del CLI, en **`PLAYBOOK - CLI de Meta.md`**.
+
+Regla simple: **empieza por el MCP**; pasa al CLI cuando choques con uno de sus límites o cuando operes muchas cuentas a diario.
 
 ## Con qué herramientas se usa
 
@@ -46,14 +54,14 @@ Cualquier agente de IA que pueda **leer los archivos de esta carpeta** y hablar 
 
 **Sistemas operativos:** funciona en **Windows, macOS y Linux**. Lo puedes usar por la **terminal** (Claude Code CLI) o con la **app de escritorio de Claude**, que integra Claude Code y funciona muy bien.
 
-> En la práctica, todo esto se construyó y se probó con **Claude Code (CLI)** usando el modelo **Opus 4.8**. Con esa combinación es con la que hay más horas de vuelo.
+> En la práctica, todo esto se construyó y se probó con **Claude Code (CLI)** usando modelos **Opus** (el 4.8 al principio; esta actualización de noviembre de 2026, con Opus 5.5). Con esa combinación es con la que hay más horas de vuelo.
 
 ---
 
 ## Primeros pasos
 
 1. **Descarga o clona esta carpeta** y ábrela con tu agente de IA:
-   - **App de escritorio de Claude:** ábrela como carpeta/proyecto. **No ejecutas ningún comando:** ya trae un `.claude/settings.json` que aplica un timeout amplio (el MCP de Meta tarda en cargar sus ~80 herramientas la primera vez).
+   - **App de escritorio de Claude:** ábrela como carpeta/proyecto. **No ejecutas ningún comando:** ya trae un `.claude/settings.json` que aplica un timeout amplio (el MCP de Meta tarda en cargar sus ~100 herramientas la primera vez).
    - **Claude Code por terminal:** entra a la carpeta y ejecuta `claude`. El timeout amplio también se aplica solo (está en `.claude/settings.json`).
    - **Gemini CLI, Antigravity u otra herramienta:** ábrela con la tuya; si el MCP tarda en la primera carga, dale un momento (y, si hace falta, sube el timeout en la config de esa herramienta).
 2. Escribe `/mcp`, elige **`meta-ads`** y **autoriza con tu cuenta de Meta** (una sola vez, por navegador). Es OAuth: no expones ningún token.
@@ -61,7 +69,7 @@ Cualquier agente de IA que pueda **leer los archivos de esta carpeta** y hablar 
 
 El `.mcp.json` ya trae el servidor configurado y el `.claude/settings.json` el **timeout amplio por defecto**. El `CLAUDE.md` se carga solo y le da a tu agente el mapa de todo esto.
 
-> Si aun así ves `-32001 Request timed out` al conectar: **no es error de credenciales**, es la primera carga (el MCP lista sus ~80 herramientas). Vuelve a abrir la carpeta o reinicia tu agente y dale un momento.
+> Si aun así ves `-32001 Request timed out` al conectar: **no es error de credenciales**, es la primera carga (el MCP lista sus ~100 herramientas). Vuelve a abrir la carpeta o reinicia tu agente y dale un momento.
 
 > **Disponibilidad (importante):** el MCP de Meta todavía **NO** está habilitado en todas las cuentas publicitarias. Meta lo va activando de forma **gradual y automática** (sin avisar). Si una cuenta no aparece o Meta rechaza el acceso, no te desesperes: prueba con **otra cuenta** (a veces una del mismo negocio sí la tiene y otra no) y **revisa cada pocos días o cada semana** — se activa solo.
 
@@ -73,15 +81,18 @@ Probado de punta a punta (todo se crea **EN PAUSA**, nada sale al aire sin tu co
 
 - **Crear campañas, conjuntos de anuncios y anuncios.**
 - **Subir creativos** con **imágenes** y **variedad de textos** (varias opciones de texto por anuncio).
-- Informes e insights, catálogos, diagnóstico de señales del píxel, tests A/B.
+- Informes e insights, benchmarks frente a anunciantes parecidos, detección de anomalías, historial de cambios de la cuenta.
+- Píxel y conjuntos de datos (calidad de coincidencia, volumen, reglas de evento), públicos personalizados y similares, catálogos, pruebas A/B y de conversion lift, la Biblioteca de anuncios.
+
+El inventario completo de las ~100 herramientas, agrupadas y con lo que cambió desde julio: **`REFERENCIA - Herramientas del MCP de Meta.md`**.
 
 > Probado con **imágenes + texto + variantes de texto**. **Video** aún no está probado.
 
 ### El detalle de subir imágenes (léelo)
 
-A primeras, el MCP te dirá que **no puede subir la imagen del anuncio** — y es cierto que no expone la subida directa. **Pero SÍ se puede:** le pasas a Meta una **URL pública** de tu imagen (`image_url`) y Meta la descarga. Eso está documentado paso a paso en el playbook de creación.
+**Esto cambió en noviembre de 2026.** Hasta entonces el MCP no subía la imagen del anuncio y había que pasarle a Meta una **URL pública** (`image_url`). Hoy existe **`ads_creative_upload_media`**, que sube **imágenes y videos** al banco de tu cuenta por URL pública o eligiendo el archivo de tu equipo (en las apps que muestran "MCP Apps"), y devuelve el `image_hash` para el anuncio. Meta la está activando poco a poco: si en tu cuenta responde "gradually rolled out", la URL pública sigue funcionando. Los dos caminos están en el playbook de creación.
 
-¿De dónde sale esa URL pública? De donde tú quieras: tu propio hosting, un bucket, o **una herramienta propia** que exponga tus creativos. La IA (Claude Code) toma esa URL pública y se la entrega al MCP; el MCP la usa para montar el anuncio con imagen. *(El handoff de la URL lo hace tu agente, no el MCP.)*
+¿De dónde sale una URL pública? De donde tú quieras: tu propio hosting, un bucket, o **una herramienta propia** que exponga tus creativos. Enlaces de Drive, Dropbox o Canva que piden iniciar sesión **no** sirven.
 
 ---
 
@@ -123,11 +134,14 @@ La IA y el MCP son una **palanca**, no un reemplazo de tu criterio. Los fundamen
 |---|---|
 | `CLAUDE.md` | Se carga solo en tu agente: el mapa + las reglas clave (empezar por aquí). |
 | `INDICE - Documentacion.md` | Índice de todo el paquete. |
-| `PLAYBOOK-Crear-Campanas-Meta.md` | Crear/montar/subir campañas y anuncios (variantes de copy, imagen por URL, geo por pin, WhatsApp, catálogo de errores). |
-| `PLAYBOOK-Analizar-Campanas-Meta.md` | Analizar campañas + generar un informe HTML visual, con benchmarks por objetivo/destino y las "3 Q's". |
-| `PLAYBOOK - CLI de Meta.md` | La vía avanzada por CLI (sube imágenes de forma nativa). |
+| `PLAYBOOK-Crear-Campanas-Meta.md` | Crear/montar/subir campañas y anuncios (variantes de copy, subir la imagen, geo por pin, WhatsApp, catálogo de errores). Empieza por su § 0: lo que cambió desde julio. |
+| `PLAYBOOK-Analizar-Campanas-Meta.md` | Analizar, leer y escalar campañas en marcha (métricas que engañan, aprendizaje, presupuesto semanal, conversiones de WhatsApp por la API de conversiones, Biblioteca de anuncios) + informe HTML. |
+| `PLAYBOOK - CLI de Meta.md` | El camino del CLI y la Graph API: instalar, configurar, errores y límites. |
+| `GUIA - Crear la app de Meta y pasar el App Review (acceso completo al CLI).md` | Paso a paso de la app de Facebook Developer: permisos, textos, videos grabados con el agente, envío, tiempos y el Access Tier. |
+| `REFERENCIA - Herramientas del MCP de Meta.md` | Las ~100 herramientas del MCP, agrupadas, y lo que todavía no hace. |
+| `REFERENCIA - Condiciones de Meta del 20 nov 2026.md` | Qué cambia en las condiciones de anuncios de Meta y qué te toca revisar. |
 | `.claude/skills/` | 6 skills que se auto-activan: `metodologia-3qs`, `monitor-pixel`, `analizar-anuncio`, `estrategia-campanas-meta`, `creativos-copy-dental`, `sugeridor-productos-catalogo`. |
-| `referencia-oficial-meta/` | Las 13 documentaciones **oficiales de Meta** en markdown, para consulta offline. |
+| `referencia-oficial-meta/` | Las documentaciones **oficiales de Meta** en markdown, para consulta offline: las 13 traducidas de julio y, en `en-2026-11/`, las 18 páginas actuales de Ads AI Connectors (CLI y servidor MCP) tal cual, en inglés. |
 | `.mcp.json` | El servidor MCP oficial de Meta, ya configurado. |
 
 ---

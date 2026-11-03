@@ -15,12 +15,25 @@
 ## Documentación / playbooks (léelos al operar el MCP)
 - **`PLAYBOOK-Crear-Campanas-Meta.md`** — crear/montar/subir campañas y anuncios: variantes por
   `asset_feed_spec` (`DEGREES_OF_FREEDOM`), opt-out multi-anunciante, píxel `OFFSITE_CONVERSIONS`/UTM, geo
-  por pin (`advantage_audience:0`), WhatsApp, imagen por URL pública. Todo en PAUSA. Con catálogo de errores.
+  por pin (`advantage_audience:0`), WhatsApp, subir la imagen. Todo en PAUSA. Con catálogo de errores.
+  **Su § 0 trae lo que cambió desde julio de 2026** (el MCP ya sube imágenes; por MCP un creativo ya no se
+  edita; el hash que miente en `IN_PROCESS`; tope de 50 anuncios; edad con Advantage+; WhatsApp por leads).
 - **`PLAYBOOK-Analizar-Campanas-Meta.md`** — analizar campañas por MCP + informe HTML: métricas
-  (`ads_get_ad_entities`), benchmarks por destino y objetivo (landing/WhatsApp/Ventas-ROAS), salud del
-  píxel, interpretación (hambreado vs no convirtió, fatiga, concentración de presupuesto).
-- **`PLAYBOOK - CLI de Meta.md`** — el CLI de Meta (vía avanzada; sube imágenes nativo; muro del modo
-  Development).
+  (`ads_get_ad_entities`, y las que engañan: `clicks`, `actions`, "Resultados"), benchmarks por destino y
+  objetivo, salud del píxel, **leer y escalar una campaña en marcha** (§ 1.6: aprendizaje por conversiones,
+  gasto semanal, costo marginal), **conversiones de WhatsApp por la API de conversiones** (§ 1.7) y la
+  **Biblioteca de anuncios** (§ 1.8).
+- **`PLAYBOOK - CLI de Meta.md`** — el CLI de Meta y la Graph API (el oficial ya se instala; versión de la
+  API, límites, errores que mienten).
+- **`GUIA - Crear la app de Meta y pasar el App Review (acceso completo al CLI).md`** — la app de Facebook
+  Developer de principio a fin: permisos, textos, videos grabados con el agente, envío, tiempos y el
+  Access Tier.
+
+## Referencias propias
+- **`REFERENCIA - Herramientas del MCP de Meta.md`** — las ~100 herramientas del MCP, agrupadas, y lo que
+  todavía no hace.
+- **`REFERENCIA - Condiciones de Meta del 20 nov 2026.md`** — qué cambia en las condiciones de anuncios y
+  qué te toca revisar.
 
 ## Skills (se auto-activan según tu pedido, en `.claude/skills/`)
 - **`monitor-pixel`** → *"revisa la salud del píxel"* (volumen, EMQ, alerta si un evento cae >20% con piso 50).
@@ -34,6 +47,7 @@
 Las **13 documentaciones oficiales de Meta** descargadas en markdown limpio, para **consultar** cuando necesites el detalle exacto (un parámetro, un permiso, un límite, una regla de las Condiciones). **Para operar mandan los playbooks y skills de arriba**; esto es la fuente autoritativa a mano. Están descargadas a propósito: una IA a veces **no puede abrir** las páginas de Meta (verificación anti-bot, login), así que aquí las tienes en local. Incluye:
 - **CLI de anuncios**: overview, empezar, configuración, referencia de comandos, tutoriales, contenido de los anuncios, conjuntos de datos, insights.
 - **Conectar agentes de IA con MCP**, **Condiciones de la plataforma**, **Parámetros de eventos del servidor (CAPI)**, **Permissions Reference**, **Uso de la API**.
+- **`en-2026-11/`**: las 18 páginas actuales de Ads AI Connectors, en inglés y sin tocar (descargadas el 3 nov 2026): el CLI oficial (8) y el **servidor MCP de anuncios** (10: overview, get started, y las herramientas por grupo). Si chocan con las de arriba, mandan estas.
 
 ## Principio rector — el criterio humano por encima de la IA
 Detrás de cada compra hay una persona. Los fundamentos de por qué una campaña vende son **atemporales**;

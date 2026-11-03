@@ -1,11 +1,59 @@
 # PLAYBOOK — CLI de Meta (`meta-ads`) para el flujo creativos → Meta
 
-> Todos los valores de este playbook (IDs de cuenta/página/píxel, números de teléfono, nombres como «Clínica Dental Aurora» o «Dra. Aurora Peña») son **ejemplos ficticios**. Reemplázalos por los de tu propia cuenta.
+> Todos los valores de este playbook (IDs de cuenta/página/píxel, números de teléfono, nombres como "Clínica Dental Aurora" o "Dra. Aurora Peña") son **ejemplos ficticios**. Reemplázalos por los de tu propia cuenta.
 
 > Guía reproducible del **CLI de Meta**: qué es, qué NO es, cómo se instala, cómo se configura, cómo
 > lo uso y lo interconecto con tus creativos y con la Graph API, su **alcance real** (qué hace y qué no),
-> los **muros** encontrados y cómo sortearlos. Complementa al `PLAYBOOK - Campaña WhatsApp por MCP.md`
-> (el del MCP). Contexto de la primera corrida: `HANDOFF - Sesion CLI 2026-07-04 (contexto completo).md`.
+> los **muros** encontrados y cómo sortearlos. Complementa a `PLAYBOOK-Crear-Campanas-Meta.md` (el del
+> MCP). Crear la app y pasar el App Review: `GUIA - Crear la app de Meta y pasar el App Review (acceso
+> completo al CLI).md`.
+
+---
+
+## 0. ACTUALIZACIÓN DE NOVIEMBRE DE 2026 (léela antes que el resto)
+
+Este playbook se escribió en julio, con la app todavía en modo desarrollo. Lo que cambió:
+
+- **El CLI oficial de Meta ya se instala:** `pip install meta-ads` (PyPI, versión 1.3.1 al 3 nov 2026,
+  Python 3.12+) o `brew tap facebook/fb && brew trust facebook/fb && brew install facebook/fb/meta-ads`
+  (macOS y Linux). Instala el comando **`meta`** (`meta --version`). La guía oficial, en
+  `referencia-oficial-meta/en-2026-11/ads-cli--setup--get-started.md`. El resto de este playbook usa el
+  CLI **comunitario** (`meta-ads-cli` 0.2.0), que fue el que operamos: las ideas valen igual, los
+  comandos cambian.
+- **El muro del modo desarrollo (§ 9) se levanta con el App Review.** Con `ads_management` aprobado y la
+  app publicada, `/adcreatives` deja de dar el 1885183. Para comprobarlo, `validate_only` con un `page_id`
+  **válido** (con uno inválido sale 1443121 y parece un falso desbloqueo). El paso a paso de la app, en la
+  GUIA del App Review.
+- **Marketing API Access Tier:** se concede solo con uso (500 llamadas a la API de Marketing en 15 días,
+  con menos de un 15 % de errores) y se mantiene con uso. **Las llamadas del MCP no cuentan** (van por la
+  app de Meta). Se ve en la cabecera `x-business-use-case-usage`, campo `ads_api_access_tier`
+  (`development_access` = limitado, `standard_access` = completo).
+- **Versión de la API:** la v21.0 caduca el 21 ene 2027. Usa v25 o posterior (`META_API_VERSION`).
+- **Campos que la v25+ exige** y que, si faltan, dan un `100 Invalid parameter` sin más:
+  `is_adset_budget_sharing_enabled` (campaña sin presupuesto propio), `advantage_audience` explícito y
+  `bid_strategy`. El mensaje útil viene en `error_user_title` y `error_user_msg`: léelos siempre.
+- **Límite de escritura:** error **613**, *"1 calls per 30 seconds"*. Una llamada `validate_only` gasta
+  ese turno: validar y escribir seguidos falla. Y `validate_only` de un conjunto o un anuncio necesita ids
+  reales de campaña y creativo (con id 0 salen falsos errores como "Invalid id: 0").
+- **Errores que mienten sobre su causa:**
+
+  | Error | Causa real |
+  |---|---|
+  | `act_act_... does not exist / missing permissions` | Un `act_` de sobra |
+  | "Invalid Page ID" | Puede ser un dígito mal copiado: compruébalo con `me/accounts` |
+  | 200 / 2490585 | Falta el rol de anunciante en la cuenta del cliente: el usuario del sistema lee pero no escribe |
+  | 100 / 2446386 "Imagen no encontrada" | La imagen se subió a OTRA cuenta (el hash es el MD5 del archivo y sale igual en cualquier cuenta) |
+  | `code 190` en `leadgen_forms` | Pide un token de PÁGINA, no un permiso nuevo |
+
+- **Trampas del CLI comunitario 0.2.0:** pide `META_PAGE_ID` incluso para leer (`=0` vale);
+  `/me/adaccounts` no lista cuentas de cliente que sí se pueden leer; su `insights` da solo totales (para
+  resultados usa la Graph API con el campo `conversions`, nunca `actions`); `upload-image` sube a la
+  cuenta por defecto si no le pasas la del cliente; y el entorno virtual guarda rutas absolutas: si mueves
+  la carpeta, se rompe en silencio.
+- **Por qué el CLI para el trabajo diario:** hace lo que el MCP no (leer `promoted_object` y
+  `attribution_spec`, cambiar el creativo de un anuncio por la Graph API, mandar eventos a la API de
+conversiones) y su uso mantiene el
+  Access Tier.
 
 ---
 
@@ -151,7 +199,7 @@ meta-ads account          # valida credenciales + cuenta
 ## 8. COMPLEMENTO CON GRAPH API (lo que el CLI no cubre)
 
 Para el caso "OUTCOME_LEADS web con evento `CompleteRegistration`" se montó por script
-(`creativos-pd-cli/montar_campana.py`), reusando los `image_hash` del CLI:
+(`creativos-cli/montar_campana.py`), reusando los `image_hash` del CLI:
 - **Campaña:** `POST act_1234567890123456/campaigns` con `objective=OUTCOME_LEADS`, `status=PAUSED`,
   `special_ad_categories=[]`, **`is_adset_budget_sharing_enabled="false"`** (obligatorio si no usas
   presupuesto de campaña).
@@ -167,7 +215,7 @@ Para el caso "OUTCOME_LEADS web con evento `CompleteRegistration`" se montó por
   (`image_hash`, `link`, `message`, `name`, `description`, `call_to_action`), luego `POST /ads`
   (`adset_id`, `creative:{creative_id}`, `status=PAUSED`).
 
-## 9. EL MURO DE LA APP EN DESARROLLO (crítico)
+## 9. EL MURO DE LA APP EN DESARROLLO (crítico hasta pasar el App Review; ver § 0)
 
 Al crear los **anuncios** (adcreatives) con el token propio saltó:
 > `code 100 / subcode 1885183` — *"La publicación con contenido publicitario se creó con una app que
@@ -191,7 +239,7 @@ Al crear los **anuncios** (adcreatives) con el token propio saltó:
   source .venv-meta-cli/bin/activate
   set -a; source .env; set +a
   export META_ACCESS_TOKEN="$ACCESS_TOKEN" EXISTING_ADSET=120210987654321000
-  python "creativos-pd-cli/colgar_ads.py"
+  python "creativos-cli/colgar_ads.py"
   ```
 
 ## 10. CATÁLOGO DE ERRORES → CAUSA → FIX
@@ -216,7 +264,7 @@ Al crear los **anuncios** (adcreatives) con el token propio saltó:
 6. [ ] Montar: `meta-ads create` (simple) **o** script Graph API con `promoted_object` (conversión).
 7. [ ] Todo en PAUSA; revisar previews/insights; activar solo con OK.
 
-## 12. ARCHIVOS DEL PROYECTO (carpeta `creativos-pd-cli/`)
+## 12. ARCHIVOS DEL PROYECTO (carpeta `creativos-cli/`)
 
 - `campaign.yaml` — campaña + 10 anuncios con copy (formato del CLI y fuente del montaje).
 - `hashes.txt` — `nombre image_hash` (subidos por CLI).
@@ -259,5 +307,6 @@ de Meta en Live; el CLI usa tu System User + tu app en dev.
   vez la app esté en **Live**.
 
 **Estado 2026-07-04:** el objetivo inicial (MCP de Meta funcional) está **cumplido**. El
-CLI queda **a medias** (funciona salvo crear anuncios) hasta que la app pase a Live — el usuario
-gestiona ese proceso por separado.
+CLI quedaba **a medias** (funciona salvo crear anuncios) hasta que la app pasara a Live.
+**Estado 2026-11:** App Review aprobado y Access Tier completo: el CLI crea anuncios. Ver § 0 y la GUIA
+del App Review.

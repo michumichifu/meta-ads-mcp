@@ -1,5 +1,7 @@
 # Conectar agentes de IA a Meta con MCP
 
+> ⚠️ **DESACTUALIZADA (nota del 3 nov 2026):** esta copia es del 12 jun 2026 y dice que no hay servidor MCP de anuncios. Hoy sí lo hay (`https://mcp.facebook.com/ads`), con documentación propia: ver `en-2026-11/ads-mcp-server--*.md` y `REFERENCIA - Herramientas del MCP de Meta.md`.
+
 > Fuente: https://developers.facebook.com/documentation/mcp
 > Actualizado: 12 jun. 2026 · Versión Markdown oficial: https://developers.facebook.com/documentation/mcp.md
 
