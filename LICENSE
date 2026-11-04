@@ -1,21 +1,40 @@
-MIT License
+LICENCIA DE USO PERSONAL — Agente Experto en Meta Ads
 
-Copyright (c) 2026 michumichifu (Proyeccion Digital)
+Copyright (c) 2026 Luis Rangel (michumichifu) · Proyección Digital. Todos los derechos reservados.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Este material (las guías, playbooks, skills, instrucciones para agentes de IA, plantillas y demás archivos de esta
+carpeta) se licencia, no se vende. Al descargarlo o usarlo aceptas estas condiciones.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+1. LO QUE SÍ PUEDES HACER
+   Usar este material tú, de forma personal, con tu propio agente de IA, para crear, analizar y gestionar campañas de
+   publicidad de tu negocio o de los clientes a los que tú mismo atiendes. Puedes modificar tu copia para tu propio uso.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+2. LO QUE NO PUEDES HACER
+   a) Redistribuirlo: copiarlo, compartirlo, publicarlo, subirlo a otro sitio o repositorio, ni entregarlo a terceros,
+      gratis o pagando, en todo o en parte, original o modificado.
+   b) Comercializarlo: venderlo, revenderlo, alquilarlo, sublicenciarlo, incluirlo en otro producto, curso, plantilla
+      o servicio que se venda, ni presentarlo como propio.
+   c) Usarlo para crear un producto que compita con este o lo sustituya.
+
+3. CONTENIDO DE TERCEROS
+   La documentación oficial de Meta incluida en `referencia-oficial-meta/` pertenece a Meta Platforms, Inc. y se
+   incluye solo para consulta; no está cubierta por esta licencia. "Meta", "Facebook", "Instagram" y "WhatsApp" son
+   marcas de sus respectivos dueños. Este producto no está afiliado a Meta Platforms, Inc.
+
+4. SIN GARANTÍAS
+   El material se entrega "tal cual", sin garantía de ningún tipo ni de resultados. Tú eres responsable de tus
+   campañas, de lo que publiques y de cumplir las políticas de Meta. El autor no responde de daños, pérdidas ni
+   gastos publicitarios derivados de su uso.
+
+5. FIN DE LA LICENCIA
+   Si incumples estas condiciones, la licencia termina automáticamente y debes dejar de usar y borrar el material.
+
+---
+
+PERSONAL USE LICENSE (summary in English)
+
+Copyright (c) 2026 Luis Rangel (michumichifu) · Proyección Digital. All rights reserved.
+You may use this material personally, with your own AI agent, to run your own or your own clients' ad campaigns.
+You may NOT redistribute, share, publish, resell, sublicense or include it, in whole or in part, in any other product
+or service. Meta's official documentation included in `referencia-oficial-meta/` belongs to Meta Platforms, Inc.
+Provided "as is", without warranty of any kind. The Spanish text above prevails.

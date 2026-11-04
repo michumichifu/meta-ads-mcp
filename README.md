@@ -158,3 +158,5 @@ La IA y el MCP son una **palanca**, no un reemplazo de tu criterio. Los fundamen
 ## Aviso
 
 Proyecto **no oficial** y **no afiliado a Meta**. "Meta", "Facebook", "Instagram" y "WhatsApp" son marcas de sus respectivos dueños. Las documentaciones oficiales incluidas son de Meta y se distribuyen aquí para consulta; la fuente autoritativa siempre es la documentación en vivo de Meta. Úsalo bajo tu propio criterio y responsabilidad, respetando las políticas de Meta.
+
+**Licencia:** de uso personal (ver `LICENSE`). Puedes usarlo tú, con tu agente de IA, para tus campañas y las de tus clientes; **no puedes redistribuirlo, compartirlo, revenderlo ni incluirlo en otro producto**.
