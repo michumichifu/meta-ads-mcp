@@ -65,7 +65,16 @@ Cualquier agente de IA que pueda **leer los archivos de esta carpeta** y hablar 
    - **Claude Code por terminal:** entra a la carpeta y ejecuta `claude`. El timeout amplio también se aplica solo (está en `.claude/settings.json`).
    - **Gemini CLI, Antigravity u otra herramienta:** ábrela con la tuya; si el MCP tarda en la primera carga, dale un momento (y, si hace falta, sube el timeout en la config de esa herramienta).
 2. Escribe `/mcp`, elige **`meta-ads`** y **autoriza con tu cuenta de Meta** (una sola vez, por navegador). Es OAuth: no expones ningún token.
-3. Pide en **lenguaje natural**: *"lista mis campañas"*, *"analiza la campaña X y hazme un informe"*, *"crea una campaña de clientes potenciales a WhatsApp, en pausa"*.
+3. **Si tu negocio atiende en una ciudad o en un radio (una clínica, un restaurante, un taller, cualquier servicio local): dale a tu agente la ubicación con un puntero, UNA sola vez.** Es el único paso manual, y es el que decide dónde sale tu publicidad:
+   1. Entra al **Administrador de anuncios** como si fueras a crear una campaña y avanza hasta el **conjunto de anuncios**, sección **Ubicaciones**.
+   2. Pulsa **"Colocar pin"** (el icono del alfiler, junto al mapa) y haz clic en el mapa **exactamente donde está tu negocio** (o el centro de la zona que quieres cubrir).
+   3. El pin aparece en la lista como un par de números, por ejemplo `19.4545, -70.6876`. **Esas son las coordenadas**: el primero es la latitud y el segundo la longitud. Cópialas.
+   4. Sal sin publicar nada y pégaselas a tu agente: *"mi negocio está en 19.4545, -70.6876, quiero un radio de 5 km"*. El agente las guarda en `MI-NEGOCIO.md` y las usa en todas las campañas, sin volver a preguntarte.
+
+   **Por qué con puntero y no con el nombre de la ciudad:** el MCP de Meta no tiene buscador de lugares, y un nombre puede caer en otra ciudad que se llama igual (hay varias "Santiago", varias "San José"...). Con el puntero, el anuncio sale exactamente donde tú dijiste, y además puedes bajar el radio hasta **4 km**, cuando por ciudad el Administrador no baja de unos 16. *Si no encuentras el botón, vale también Google Maps: clic derecho sobre el punto y la primera línea del menú son las coordenadas; un clic y quedan copiadas.*
+
+   **Si vendes a todo un país o tienes una tienda online, sáltate este paso:** basta con decirle a tu agente el país.
+4. Pide en **lenguaje natural**: *"lista mis campañas"*, *"analiza la campaña X y hazme un informe"*, *"crea una campaña de clientes potenciales a WhatsApp, en pausa"*.
 
 El `.mcp.json` ya trae el servidor configurado y el `.claude/settings.json` el **timeout amplio por defecto**. El `CLAUDE.md` se carga solo y le da a tu agente el mapa de todo esto.
 

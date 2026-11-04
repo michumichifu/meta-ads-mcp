@@ -366,6 +366,8 @@ Esto causó los errores más molestos. Reglas que quedaron claras:
    la "clave" de una ciudad/región. **Solución:** usar `custom_locations` con **latitud/longitud +
    radio** (las coordenadas del pin del mapa). Ventaja extra: por ciudad el radio mínimo de la GUI es
    ~16 km (demasiado para una ciudad chica); con `custom_locations` se puede bajar a **4 km**.
+   **Las coordenadas las da el USUARIO poniendo el pin, una sola vez** (paso 3 de "Primeros pasos" del
+   `README.md`), y quedan en `MI-NEGOCIO.md`. Nunca se deducen del nombre de la ciudad: hay homónimas.
 2. **Desactivar Advantage+ Audience** para campañas locales: `targeting_automation.advantage_audience: 0`.
    Con Advantage+ ON, Meta trata la ubicación como *señal* y **re-inyecta al publicar** el tipo de
    lugar "personas interesadas / que viajan a" (que Meta ya **descontinuó**) → provoca el error

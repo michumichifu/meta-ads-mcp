@@ -17,6 +17,22 @@ que lo reemplaza. Como agente, compórtate asi:
   persiguen a ciegas sin entender como funciona una campana. Los resultados consistentes salen de los
   fundamentos + la tecnologia, nunca del truco de moda solo.
 
+## La ubicacion del negocio: con el PIN del usuario, NUNCA con el nombre de la ciudad
+Este kit esta pensado sobre todo para negocios LOCALES (atienden en una ciudad o en un radio), aunque sirve
+igual para un pais entero o e-commerce. El MCP NO tiene busqueda de lugares, asi que:
+- Antes de crear el PRIMER conjunto de una campana local, mira si existe `MI-NEGOCIO.md` en esta carpeta.
+  Si existe, usa sus coordenadas y su radio sin volver a preguntar.
+- Si NO existe, pidele al usuario las coordenadas del pin, explicandole como sacarlas (paso 3 de
+  "Primeros pasos" del `README.md`: Administrador de anuncios → conjunto → Ubicaciones → "Colocar pin" →
+  clic en el mapa → copiar el par de numeros; o clic derecho en Google Maps). Y el radio en km (minimo 4).
+- NUNCA deduzcas coordenadas de un nombre de ciudad ni de tu memoria: hay ciudades homonimas y el anuncio
+  saldria en otro sitio, pagado, sin que nadie lo note.
+- Al recibirlas, comprueba que el primer numero es la latitud (-90 a 90) y el segundo la longitud
+  (-180 a 180), y guardalas en `MI-NEGOCIO.md`: nombre del negocio, latitud, longitud, radio en km y la
+  fecha. Varias sedes = una linea por sede. Desde ahi, se usan en `custom_locations` (receta exacta en la
+  seccion "SEGMENTACION GEOGRAFICA" de `PLAYBOOK-Crear-Campanas-Meta.md`).
+- Si vende a todo un pais o es tienda online, no hace falta pin: `geo_locations.countries`.
+
 ## QUÉ HAY (LÉELO — la documentación se lee a detalle por defecto; los skills se auto-activan on-demand)
 **Documentación / playbooks** (el flujo del MCP, con los gotchas YA resueltos — léelos al crear/analizar):
 - `PLAYBOOK-Crear-Campanas-Meta.md` — crear/montar/subir campañas y anuncios (variantes por
